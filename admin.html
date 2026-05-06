@@ -1,0 +1,899 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Soul Support · Панель</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300&family=Jost:wght@300;400;500&display=swap');
+
+  :root {
+    --bg: #0a1410;
+    --bg2: #0f1d18;
+    --bg3: #14231e;
+    --gold: #c9a961;
+    --gold2: #e8d5a3;
+    --gold-soft: rgba(201, 169, 97, 0.12);
+    --border: rgba(201, 169, 97, 0.15);
+    --green-deep: #1a3329;
+    --text: #ede8d8;
+    --text2: #8a8470;
+    --text3: #4a4839;
+    --rose: #b88a8a;
+    --green-success: #6fa97a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Jost', sans-serif;
+    font-weight: 300;
+    min-height: 100vh;
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 30% 0%, rgba(26, 51, 41, 0.5), transparent 70%),
+      radial-gradient(ellipse 50% 30% at 70% 100%, rgba(26, 51, 41, 0.4), transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; padding-bottom: 50px; }
+
+  .topbar {
+    padding: 18px 20px 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .badge-admin {
+    font-size: 10px; color: var(--gold);
+    letter-spacing: 0.3em; text-transform: uppercase;
+    border: 1px solid var(--gold-soft);
+    padding: 5px 12px; border-radius: 100px;
+  }
+  .user-mini { display: flex; align-items: center; gap: 10px; }
+  .user-mini .name { font-size: 13px; color: var(--text); }
+
+  .brand {
+    text-align: center; padding: 28px 20px 24px; position: relative;
+  }
+  .brand::before, .brand::after {
+    content: ''; position: absolute; left: 50%; transform: translateX(-50%);
+    width: 60px; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: 0.5;
+  }
+  .brand::before { top: 12px; }
+  .brand::after { bottom: 12px; }
+  .brand-mark {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px; font-weight: 300; font-style: italic;
+    color: var(--gold2);
+  }
+  .brand-sub {
+    margin-top: 8px; font-size: 9px; color: var(--text2);
+    letter-spacing: 0.4em; text-transform: uppercase;
+  }
+
+  .tabs-wrap { padding: 0 20px; margin-bottom: 20px; }
+  .tabs {
+    display: flex; gap: 4px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 4px;
+    overflow-x: auto; scrollbar-width: none;
+  }
+  .tabs::-webkit-scrollbar { display: none; }
+  .tab {
+    flex: 1; min-width: max-content; padding: 9px 10px;
+    border-radius: 10px; font-family: inherit; font-size: 11px; font-weight: 400;
+    border: none; background: transparent; color: var(--text2);
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    letter-spacing: 0.05em;
+  }
+  .tab.active { background: var(--gold); color: var(--bg); font-weight: 500; }
+
+  .content { padding: 0 20px; display: none; }
+  .content.active { display: block; }
+
+  .section-label {
+    font-size: 10px; color: var(--text2);
+    letter-spacing: 0.3em; text-transform: uppercase;
+    margin-bottom: 14px; text-align: center;
+  }
+  .section-label::before, .section-label::after {
+    content: '— '; color: var(--gold); opacity: 0.5;
+  }
+  .section-label::after { content: ' —'; }
+
+  /* Cards */
+  .card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px;
+    margin-bottom: 8px; transition: all 0.2s;
+  }
+  .card-row {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px;
+  }
+  .card-info { flex: 1; min-width: 0; }
+  .card-title {
+    font-size: 14px; color: var(--text);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .card-sub {
+    font-size: 11px; color: var(--text2);
+    margin-top: 3px; letter-spacing: 0.05em;
+  }
+
+  /* Schedule */
+  .day-group {
+    margin-bottom: 18px;
+  }
+  .day-header {
+    display: flex; align-items: baseline; gap: 8px;
+    margin-bottom: 8px;
+  }
+  .day-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px; font-weight: 400; color: var(--gold2); line-height: 1;
+  }
+  .day-month {
+    font-size: 10px; color: var(--text2);
+    letter-spacing: 0.2em; text-transform: uppercase;
+  }
+  .day-line {
+    flex: 1; height: 1px; margin-left: 8px;
+    background: linear-gradient(90deg, var(--gold-soft), transparent);
+  }
+
+  /* Stats */
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 16px;
+  }
+  .stat-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 16px;
+  }
+  .stat-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px; font-weight: 300; color: var(--gold2); line-height: 1;
+  }
+  .stat-num.big {
+    font-size: 36px;
+  }
+  .stat-lbl {
+    margin-top: 6px; font-size: 9px; color: var(--text2);
+    letter-spacing: 0.25em; text-transform: uppercase;
+  }
+  .income-card {
+    grid-column: 1 / -1;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 18px 16px;
+    text-align: center;
+  }
+  .income-card .stat-num {
+    font-size: 36px; color: var(--gold);
+  }
+  .income-card .stat-lbl {
+    margin-top: 8px;
+  }
+  .income-pending {
+    margin-top: 8px; font-size: 11px; color: var(--text2);
+    letter-spacing: 0.05em;
+  }
+
+  /* Buttons */
+  .btn {
+    width: 100%; padding: 14px;
+    border-radius: 100px;
+    background: var(--gold); color: var(--bg);
+    font-family: 'Jost', sans-serif; font-size: 11px; font-weight: 500;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    border: none; cursor: pointer; transition: all 0.2s;
+  }
+  .btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .btn:not(:disabled):hover { background: var(--gold2); }
+  .btn-ghost {
+    background: transparent; color: var(--gold);
+    border: 1px solid var(--gold);
+  }
+  .btn-ghost:hover { background: var(--gold-soft); }
+  .btn-danger {
+    background: transparent; color: var(--rose);
+    border: 1px solid rgba(184, 138, 138, 0.3);
+  }
+  .btn-danger:hover { background: rgba(184, 138, 138, 0.08); }
+  .btn-sm {
+    padding: 8px 14px; font-size: 10px;
+    width: auto;
+  }
+  .btn-row {
+    display: flex; gap: 8px; margin-bottom: 16px;
+  }
+  .btn-row .btn { flex: 1; }
+
+  /* Badges */
+  .badge {
+    padding: 4px 10px; border-radius: 100px;
+    font-size: 9px; font-weight: 500;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .badge.paid {
+    background: rgba(111, 169, 122, 0.15); color: var(--green-success);
+    border: 1px solid rgba(111, 169, 122, 0.3);
+  }
+  .badge.unpaid {
+    background: rgba(184, 138, 138, 0.1); color: var(--rose);
+    border: 1px solid rgba(184, 138, 138, 0.2);
+  }
+  .badge.gold {
+    background: var(--gold-soft); color: var(--gold);
+    border: 1px solid var(--gold-soft);
+  }
+
+  /* Slots management */
+  .slot-item {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 14px;
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .slot-time {
+    font-size: 13px; color: var(--text);
+  }
+  .slot-remove {
+    background: transparent; border: none; color: var(--rose);
+    font-size: 18px; cursor: pointer;
+    padding: 4px 8px; border-radius: 6px;
+    line-height: 1; opacity: 0.6;
+    transition: opacity 0.2s;
+  }
+  .slot-remove:hover { opacity: 1; }
+
+  /* Form */
+  .input-row {
+    display: flex; gap: 8px; margin-bottom: 16px;
+  }
+  .input {
+    flex: 1; padding: 14px;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 12px; color: var(--text);
+    font-family: inherit; font-size: 13px;
+    outline: none; transition: border-color 0.2s;
+  }
+  .input:focus { border-color: var(--gold); }
+  .input::placeholder { color: var(--text3); }
+
+  /* Client cards */
+  .client-card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px;
+    margin-bottom: 8px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .client-card:hover { border-color: var(--gold-soft); }
+  .client-row {
+    display: flex; align-items: center; gap: 12px;
+  }
+  .client-avatar {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), #8a7340);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--bg); font-size: 14px; font-weight: 500;
+    flex-shrink: 0;
+  }
+  .client-info { flex: 1; min-width: 0; }
+  .client-name {
+    font-size: 14px; color: var(--text); font-weight: 400;
+  }
+  .client-stats {
+    margin-top: 3px; font-size: 10px; color: var(--text2);
+    letter-spacing: 0.05em;
+  }
+
+  /* Payment item */
+  .payment-item {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px 16px;
+    margin-bottom: 8px;
+  }
+  .pay-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 6px;
+  }
+  .pay-name { font-size: 14px; color: var(--text); }
+  .pay-amount {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px; color: var(--gold2);
+  }
+  .pay-meta {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 8px;
+  }
+  .pay-tx { font-size: 10px; color: var(--text3); letter-spacing: 0.05em; }
+  .pay-confirm {
+    background: var(--gold); color: var(--bg);
+    border: none; padding: 6px 14px;
+    border-radius: 100px;
+    font-family: inherit; font-size: 10px; font-weight: 500;
+    letter-spacing: 0.15em; text-transform: uppercase;
+    cursor: pointer;
+  }
+
+  /* Modal */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(10, 20, 16, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    display: flex; align-items: flex-end;
+    z-index: 100;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    width: 100%; background: var(--bg2);
+    border-radius: 24px 24px 0 0;
+    padding: 12px 20px 36px;
+    transform: translateY(100%);
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    max-height: 85vh; overflow-y: auto;
+    border-top: 1px solid var(--gold-soft);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-handle {
+    width: 36px; height: 4px; background: var(--text3);
+    border-radius: 2px; margin: 0 auto 20px;
+  }
+  .modal h3 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; font-weight: 400; color: var(--gold2);
+    margin-bottom: 16px; font-style: italic; text-align: center;
+  }
+
+  .info-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin-bottom: 16px;
+  }
+  .info-cell {
+    background: var(--bg3); border-radius: 10px; padding: 12px;
+  }
+  .info-cell .lbl {
+    font-size: 9px; color: var(--text2);
+    letter-spacing: 0.2em; text-transform: uppercase;
+  }
+  .info-cell .val {
+    font-size: 14px; color: var(--text); margin-top: 4px;
+  }
+  .info-cell .val.big {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px; color: var(--gold2); line-height: 1;
+  }
+
+  .info-block {
+    background: var(--bg3); border-radius: 10px;
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .info-block .label {
+    font-size: 9px; color: var(--text2);
+    letter-spacing: 0.2em; text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .info-block .text {
+    font-size: 13px; color: var(--text); line-height: 1.6;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 30px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg2); border: 1px solid var(--gold);
+    border-radius: 100px; padding: 12px 24px;
+    font-size: 11px; color: var(--gold2);
+    letter-spacing: 0.15em; text-transform: uppercase;
+    opacity: 0; pointer-events: none; transition: all 0.3s;
+    z-index: 200;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .loading {
+    display: flex; align-items: center; justify-content: center;
+    padding: 40px; color: var(--text2);
+    font-size: 11px; gap: 10px; letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .spinner {
+    width: 14px; height: 14px;
+    border: 1px solid var(--border); border-top-color: var(--gold);
+    border-radius: 50%; animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center; padding: 40px 20px; color: var(--text2);
+    font-size: 11px; letter-spacing: 0.1em;
+  }
+
+  .access-denied {
+    text-align: center; padding: 80px 20px;
+    color: var(--text2);
+  }
+  .access-denied .icon {
+    font-size: 36px; margin-bottom: 16px; opacity: 0.4;
+  }
+  .access-denied .title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px; color: var(--gold2);
+    font-style: italic; margin-bottom: 8px;
+  }
+  .access-denied .text {
+    font-size: 12px; letter-spacing: 0.1em;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+<!-- Access denied screen -->
+<div id="access-denied" class="access-denied" style="display:none">
+  <div class="icon">⊕</div>
+  <div class="title">Доступ только для психолога</div>
+  <div class="text">Эта панель управления доступна только администратору</div>
+</div>
+
+<!-- Main UI -->
+<div id="main-ui" style="display:none">
+
+<div class="topbar">
+  <div class="user-mini">
+    <span class="name" id="user-name">Александра</span>
+  </div>
+  <span class="badge-admin">Admin</span>
+</div>
+
+<div class="brand">
+  <div class="brand-mark">soul support</div>
+  <div class="brand-sub">Панель управления</div>
+</div>
+
+<div class="tabs-wrap">
+  <div class="tabs">
+    <button class="tab active" data-tab="schedule">Расписание</button>
+    <button class="tab" data-tab="clients">Клиенты</button>
+    <button class="tab" data-tab="payments">Платежи</button>
+    <button class="tab" data-tab="slots">Слоты</button>
+    <button class="tab" data-tab="analytics">Сводка</button>
+  </div>
+</div>
+
+<!-- ── SCHEDULE ── -->
+<div id="tab-schedule" class="content active">
+  <div id="schedule-content"></div>
+</div>
+
+<!-- ── CLIENTS ── -->
+<div id="tab-clients" class="content">
+  <div id="clients-content"></div>
+</div>
+
+<!-- ── PAYMENTS ── -->
+<div id="tab-payments" class="content">
+  <div id="payments-content"></div>
+</div>
+
+<!-- ── SLOTS ── -->
+<div id="tab-slots" class="content">
+  <div class="btn-row">
+    <button class="btn btn-ghost btn-sm" id="gen-slots">Сгенерировать на 2 недели</button>
+  </div>
+  <div class="input-row">
+    <input class="input" id="new-slot-input" placeholder="15.05 Пятница 15:00" />
+    <button class="btn btn-sm" id="add-slot-btn" style="width:auto;padding:0 18px">+</button>
+  </div>
+  <div class="section-label">Свободные слоты</div>
+  <div id="slots-list"></div>
+</div>
+
+<!-- ── ANALYTICS ── -->
+<div id="tab-analytics" class="content">
+  <div id="analytics-content"></div>
+</div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+</div>
+
+<script>
+const tg = window.Telegram.WebApp;
+tg.ready();
+tg.expand();
+try {
+  tg.setHeaderColor('#0a1410');
+  tg.setBackgroundColor('#0a1410');
+} catch(e) {}
+
+const user = tg.initDataUnsafe?.user || {};
+const userId = user.id || null;
+const userName = user.first_name || user.username || 'Admin';
+
+document.getElementById('user-name').textContent = userName;
+
+const API_BASE = 'https://start-production-d65b.up.railway.app/api';
+
+// ── Auth check ──────────────────────────────────────────────────────────────
+async function checkAccess() {
+  if (!userId) return showAccessDenied();
+  try {
+    const res = await fetch(API_BASE + '/admin/analytics', {
+      headers: { 'X-Admin-ID': userId }
+    });
+    if (res.status === 403) return showAccessDenied();
+    if (!res.ok) return showAccessDenied();
+    document.getElementById('main-ui').style.display = 'block';
+    init();
+  } catch(e) {
+    showAccessDenied();
+  }
+}
+
+function showAccessDenied() {
+  document.getElementById('access-denied').style.display = 'block';
+  document.getElementById('main-ui').style.display = 'none';
+}
+
+// ── API helper ──────────────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-Admin-ID': userId,
+    ...(opts.headers || {})
+  };
+  const res = await fetch(API_BASE + path, { ...opts, headers });
+  if (!res.ok) throw new Error('API error: ' + res.status);
+  return res.json();
+}
+
+// ── Tabs ────────────────────────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    const name = tab.dataset.tab;
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('tab-' + name).classList.add('active');
+    loadTab(name);
+  });
+});
+
+const MONTHS = ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'];
+
+function loadTab(name) {
+  if (name === 'schedule') loadSchedule();
+  else if (name === 'clients') loadClients();
+  else if (name === 'payments') loadPayments();
+  else if (name === 'slots') loadSlots();
+  else if (name === 'analytics') loadAnalytics();
+}
+
+// ── Schedule ────────────────────────────────────────────────────────────────
+async function loadSchedule() {
+  const el = document.getElementById('schedule-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Загрузка</div>';
+  try {
+    const bookings = await api('/admin/schedule');
+    if (!bookings.length) {
+      el.innerHTML = '<div class="empty-state">Записей пока нет</div>';
+      return;
+    }
+    // Группируем по датам
+    const groups = {};
+    bookings.forEach(b => {
+      const key = b.slot_date || 'unknown';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(b);
+    });
+    const sortedDates = Object.keys(groups).sort();
+    let html = '';
+    sortedDates.forEach(d => {
+      const date = new Date(d);
+      const dayNum = date.getDate();
+      const monthName = MONTHS[date.getMonth()];
+      html += '<div class="day-group">';
+      html += '<div class="day-header">';
+      html += '<div class="day-num">' + dayNum + '</div>';
+      html += '<div class="day-month">' + monthName + '</div>';
+      html += '<div class="day-line"></div>';
+      html += '</div>';
+      groups[d].forEach(b => {
+        const time = (b.slot || '').match(/(\d+:\d+)/);
+        const timeStr = time ? time[1] : '';
+        html += '<div class="card"><div class="card-row">';
+        html += '<div class="card-info">';
+        html += '<div class="card-title">' + (b.name || '—') + ' · ' + timeStr + '</div>';
+        html += '<div class="card-sub">' + (b.phone || '—') + '</div>';
+        html += '</div>';
+        html += '<span class="badge ' + (b.paid ? 'paid' : 'unpaid') + '">';
+        html += (b.paid ? '✓ Оплачено' : 'Ожидает');
+        html += '</span>';
+        html += '</div></div>';
+      });
+      html += '</div>';
+    });
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+  }
+}
+
+// ── Clients ─────────────────────────────────────────────────────────────────
+async function loadClients() {
+  const el = document.getElementById('clients-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Загрузка</div>';
+  try {
+    const clients = await api('/admin/clients');
+    if (!clients.length) {
+      el.innerHTML = '<div class="empty-state">Клиентов пока нет</div>';
+      return;
+    }
+    const emojis = {1:'😢',2:'😔',3:'😐',4:'🙂',5:'😊'};
+    let html = '';
+    clients.forEach(c => {
+      const initial = (c.name || '?').charAt(0).toUpperCase();
+      const mood = c.last_mood ? emojis[c.last_mood] : '';
+      html += '<div class="client-card" data-uid="' + c.user_id + '"><div class="client-row">';
+      html += '<div class="client-avatar">' + initial + '</div>';
+      html += '<div class="client-info">';
+      html += '<div class="client-name">' + (c.name || 'Без имени') + ' ' + mood + '</div>';
+      html += '<div class="client-stats">' + c.total + ' зап · ' + c.paid + ' опл · ' + c.completed + ' зав</div>';
+      html += '</div></div></div>';
+    });
+    el.innerHTML = html;
+    document.querySelectorAll('.client-card').forEach(c => {
+      c.addEventListener('click', () => openClientModal(c.dataset.uid));
+    });
+  } catch(e) {
+    el.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+  }
+}
+
+async function openClientModal(uid) {
+  const overlay = document.getElementById('modal-overlay');
+  const content = document.getElementById('modal-content');
+  content.innerHTML = '<div class="loading"><div class="spinner"></div>Загрузка</div>';
+  overlay.classList.add('open');
+  try {
+    const c = await api('/admin/client/' + uid);
+    let html = '<h3>' + (c.name || 'Без имени') + '</h3>';
+    html += '<div class="info-grid">';
+    html += '<div class="info-cell"><div class="lbl">Сессий</div><div class="val big">' + c.stats.total + '</div></div>';
+    html += '<div class="info-cell"><div class="lbl">Оплачено</div><div class="val big">' + c.stats.paid + '</div></div>';
+    html += '<div class="info-cell"><div class="lbl">Завершено</div><div class="val big">' + c.stats.completed + '</div></div>';
+    const moodEmojis = {1:'😢',2:'😔',3:'😐',4:'🙂',5:'😊'};
+    html += '<div class="info-cell"><div class="lbl">Настроение</div><div class="val big">' + (c.stats.last_mood ? moodEmojis[c.stats.last_mood] : '—') + '</div></div>';
+    html += '</div>';
+    html += '<div class="info-block"><div class="label">ID · Язык · Часовой пояс</div><div class="text">' + c.user_id + ' · ' + c.lang + ' · ' + (c.tz || '—') + '</div></div>';
+    if (c.questionnaire) {
+      html += '<div class="info-block"><div class="label">Анкета</div><div class="text">';
+      html += 'Тема: ' + (c.questionnaire.goal || '—') + '<br>';
+      html += 'Запрос: ' + (c.questionnaire.request || '—') + '<br>';
+      html += 'Источник: ' + (c.questionnaire.source || '—');
+      html += '</div></div>';
+    }
+    if (c.note) {
+      html += '<div class="info-block"><div class="label">Заметка</div><div class="text">' + c.note + '</div></div>';
+    }
+    if (c.bookings && c.bookings.length) {
+      html += '<div class="info-block"><div class="label">Записи (' + c.bookings.length + ')</div><div class="text">';
+      c.bookings.slice(0, 5).forEach(b => {
+        html += (b.cancelled ? '❌ ' : (b.paid ? '✓ ' : '⊙ ')) + (b.slot || '—') + '<br>';
+      });
+      html += '</div></div>';
+    }
+    html += '<button class="btn" onclick="closeModal()">Закрыть</button>';
+    content.innerHTML = html;
+  } catch(e) {
+    content.innerHTML = '<h3>Ошибка</h3><button class="btn" onclick="closeModal()">Закрыть</button>';
+  }
+}
+
+// ── Payments ────────────────────────────────────────────────────────────────
+async function loadPayments() {
+  const el = document.getElementById('payments-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Загрузка</div>';
+  try {
+    const payments = await api('/admin/payments');
+    if (!payments.length) {
+      el.innerHTML = '<div class="empty-state">Платежей пока нет</div>';
+      return;
+    }
+    let html = '';
+    payments.forEach(p => {
+      const date = (p.created_at || '').slice(0, 10);
+      html += '<div class="payment-item">';
+      html += '<div class="pay-head">';
+      html += '<div class="pay-name">' + (p.name || '—') + '</div>';
+      html += '<div class="pay-amount">' + p.amount + ' UAH</div>';
+      html += '</div>';
+      html += '<div class="card-sub">' + (p.purpose || '—') + ' · ' + date + '</div>';
+      html += '<div class="pay-meta">';
+      html += '<div class="pay-tx">#' + p.tx_id + '</div>';
+      if (p.confirmed) {
+        html += '<span class="badge paid">✓ Подтверждено</span>';
+      } else {
+        html += '<button class="pay-confirm" data-tx="' + p.tx_id + '">Подтвердить</button>';
+      }
+      html += '</div></div>';
+    });
+    el.innerHTML = html;
+    document.querySelectorAll('.pay-confirm').forEach(b => {
+      b.addEventListener('click', async () => {
+        const tx = b.dataset.tx;
+        b.disabled = true;
+        b.textContent = '...';
+        try {
+          await api('/admin/confirm-payment', {
+            method: 'POST',
+            body: JSON.stringify({ tx_id: tx })
+          });
+          showToast('Подтверждено');
+          loadPayments();
+        } catch(e) {
+          showToast('Ошибка');
+          b.disabled = false;
+          b.textContent = 'Подтвердить';
+        }
+      });
+    });
+  } catch(e) {
+    el.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+  }
+}
+
+// ── Slots ───────────────────────────────────────────────────────────────────
+async function loadSlots() {
+  const el = document.getElementById('slots-list');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Загрузка</div>';
+  try {
+    const slots = await api('/admin/slots');
+    if (!slots.length) {
+      el.innerHTML = '<div class="empty-state">Свободных слотов нет</div>';
+      return;
+    }
+    let html = '';
+    slots.forEach(s => {
+      html += '<div class="slot-item">';
+      html += '<div class="slot-time">' + s.slot + '</div>';
+      html += '<button class="slot-remove" data-slot="' + s.slot.replace(/"/g, '&quot;') + '">×</button>';
+      html += '</div>';
+    });
+    el.innerHTML = html;
+    document.querySelectorAll('.slot-remove').forEach(b => {
+      b.addEventListener('click', async () => {
+        const slot = b.dataset.slot;
+        try {
+          await api('/admin/remove-slot', {
+            method: 'POST',
+            body: JSON.stringify({ slot })
+          });
+          showToast('Удалено');
+          loadSlots();
+        } catch(e) {
+          showToast('Ошибка');
+        }
+      });
+    });
+  } catch(e) {
+    el.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+  }
+}
+
+document.getElementById('add-slot-btn').addEventListener('click', async () => {
+  const input = document.getElementById('new-slot-input');
+  const slot = input.value.trim();
+  if (!slot) return;
+  try {
+    const res = await api('/admin/add-slot', {
+      method: 'POST',
+      body: JSON.stringify({ slot })
+    });
+    if (res.status === 'exists') {
+      showToast('Уже есть');
+    } else {
+      showToast('Добавлено');
+      input.value = '';
+      loadSlots();
+    }
+  } catch(e) {
+    showToast('Ошибка');
+  }
+});
+
+document.getElementById('gen-slots').addEventListener('click', async (e) => {
+  const btn = e.target;
+  btn.disabled = true;
+  btn.textContent = 'Генерируем...';
+  try {
+    await api('/admin/generate-slots', { method: 'POST' });
+    showToast('Слоты обновлены');
+    loadSlots();
+  } catch(e) {
+    showToast('Ошибка');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Сгенерировать на 2 недели';
+  }
+});
+
+// ── Analytics ───────────────────────────────────────────────────────────────
+async function loadAnalytics() {
+  const el = document.getElementById('analytics-content');
+  el.innerHTML = '<div class="loading"><div class="spinner"></div>Загрузка</div>';
+  try {
+    const a = await api('/admin/analytics');
+    let html = '';
+    html += '<div class="stats-grid">';
+    html += '<div class="income-card">';
+    html += '<div class="stat-num">' + (a.income_total || 0).toLocaleString() + ' UAH</div>';
+    html += '<div class="stat-lbl">Подтверждённый доход</div>';
+    if (a.income_pending > 0) {
+      html += '<div class="income-pending">+ ' + a.income_pending.toLocaleString() + ' UAH ожидают подтверждения</div>';
+    }
+    html += '</div>';
+    html += '<div class="stat-card"><div class="stat-num">' + (a.users || 0) + '</div><div class="stat-lbl">Клиентов</div></div>';
+    html += '<div class="stat-card"><div class="stat-num">' + (a.bookings || 0) + '</div><div class="stat-lbl">Записей</div></div>';
+    html += '<div class="stat-card"><div class="stat-num">' + (a.paid || 0) + '</div><div class="stat-lbl">Оплачено</div></div>';
+    html += '<div class="stat-card"><div class="stat-num">' + (a.slots_free || 0) + '</div><div class="stat-lbl">Свободно</div></div>';
+    html += '<div class="stat-card"><div class="stat-num">' + (Math.round((a.avg_rating || 0) * 10) / 10) + '</div><div class="stat-lbl">Рейтинг</div></div>';
+    html += '<div class="stat-card"><div class="stat-num">' + (Math.round((a.avg_mood || 0) * 10) / 10) + '</div><div class="stat-lbl">Настроение</div></div>';
+    html += '<div class="stat-card"><div class="stat-num">' + (a.diary || 0) + '</div><div class="stat-lbl">Дневников</div></div>';
+    html += '<div class="stat-card"><div class="stat-num">' + (a.checkins || 0) + '</div><div class="stat-lbl">Чек-инов</div></div>';
+    html += '</div>';
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="empty-state">Ошибка загрузки</div>';
+  }
+}
+
+// ── Modal ───────────────────────────────────────────────────────────────────
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+document.getElementById('modal-overlay').addEventListener('click', (e) => {
+  if (e.target.id === 'modal-overlay') closeModal();
+});
+
+// ── Toast ───────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Init ────────────────────────────────────────────────────────────────────
+function init() {
+  loadSchedule();
+}
+
+checkAccess();
+</script>
+</body>
+</html>
